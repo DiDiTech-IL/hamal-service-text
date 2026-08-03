@@ -1,0 +1,112 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Hamal {
+  id           String    @id @default(cuid())
+  clerkHamalId String    @unique
+  name         String
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  users        User[]
+  Pluga        Pluga[]
+  messages     Message[]
+}
+
+model User {
+  id          String   @id @default(cuid())
+  clerkUserId String   @unique
+  email       String   @unique
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  role        String
+  hamalId     String
+  hamal       Hamal    @relation(fields: [hamalId], references: [id])
+}
+
+model Gdud {
+  number Int     @id
+  alias  String?
+  plugot Pluga[]
+}
+
+model Pluga {
+  id    String @id
+  teams Team[]
+  hamal Hamal  @relation(fields: [hamalId], references: [id])
+
+  responsibility String @default("Off Duty")
+
+  gdud       Gdud? @relation(fields: [gdudNumber], references: [number])
+  gdudNumber Int?
+
+  tasks   Task[]
+  hamalId String
+}
+
+model Team {
+  id   Int    @id
+  name String
+
+  pluga   Pluga  @relation(fields: [plugaId], references: [id])
+  plugaId String
+
+  personnel Soldier[]
+  tasks     Task[]
+}
+
+model Soldier {
+  id     String  @id
+  idfID  Int     @unique
+  name   String
+  email  String? @unique
+  phone  String?
+  mobile String  @unique
+
+  present Boolean
+  onDuty  Boolean
+
+  team   Team @relation(fields: [teamId], references: [id])
+  teamId Int
+
+  roleInTeam String @default("לוחם")
+
+  taskList Task[]
+}
+
+model Task {
+  id             String @id @default(cuid())
+  name           String
+  area           String
+  additionalInfo String
+
+  pluga   Pluga  @relation(fields: [plugaId], references: [id])
+  plugaId String
+
+  responsibleTeam Team @relation(fields: [teamId], references: [id])
+  teamId          Int
+
+  solidersOnMission Soldier[]
+  startTime         String
+  endTime           String
+  active            Boolean
+}
+
+model Message {
+  id String @id @default(cuid())
+
+  Hamal   Hamal  @relation(fields: [hamalId], references: [id])
+  hamalId String
+
+  messageType    String
+  messageContent String
+  messageTarget  String
+
+  valid  Boolean //תקין, לא תקין - מונע שליחה
+  status Boolean // נשלח, לא נשלח
+}
